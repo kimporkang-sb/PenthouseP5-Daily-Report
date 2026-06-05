@@ -38,9 +38,7 @@
   }
   header h1 { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: 0.04em; text-transform: uppercase; }
   header p  { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; font-family: var(--mono); }
-
   .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .card-label {
     background: var(--olive-light); border-bottom: 1px solid var(--border);
@@ -48,12 +46,8 @@
     letter-spacing: 0.06em; text-transform: uppercase;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .card-label .tag {
-    background: var(--olive); color: #fff; font-size: 10px;
-    padding: 2px 7px; border-radius: 20px; font-weight: 500;
-  }
+  .card-label .tag { background: var(--olive); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
   .card-label .tag.sub { background: var(--accent); }
-
   textarea {
     width: 100%; border: none; outline: none; resize: none;
     font-family: var(--mono); font-size: 13px; line-height: 1.6;
@@ -62,7 +56,6 @@
   }
   textarea::placeholder { color: var(--muted); }
   textarea.output-ta { background: var(--bg); min-height: 260px; }
-
   .add-btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
     width: 100%; padding: 12px; background: var(--surface);
@@ -71,7 +64,6 @@
     -webkit-appearance: none;
   }
   .add-btn:active { background: var(--border); }
-
   .generate-btn {
     width: 100%; padding: 15px; background: var(--accent); color: #fff;
     border: none; border-radius: var(--radius);
@@ -79,7 +71,6 @@
     -webkit-appearance: none;
   }
   .generate-btn:active { opacity: 0.85; }
-
   .output-wrap { display: none; }
   .output-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -92,7 +83,6 @@
     font-size: 12px; font-weight: 500; font-family: var(--sans); cursor: pointer; -webkit-appearance: none;
   }
   .copy-btn:active { background: rgba(255,255,255,0.35); }
-
   .error {
     display: none; background: #FFF0F1; border: 1px solid #FFCDD2;
     border-radius: var(--radius); padding: 12px 14px;
@@ -111,7 +101,7 @@
 <div class="content">
   <div class="card">
     <div class="card-label">Block 1 — Main Report <span class="tag">Manpower + Activities</span></div>
-    <textarea id="block1" rows="9" placeholder="2026.06.04UVP2 PENTHOUSES&#10;Translation: 1 person&#10;Male workers: 11&#10;Electrical workers: 3&#10;Female workers: 2&#10;Tasks: Lay materials, apply floor tiles...&#10;Total: 17 individuals.&#10;#Air Conditioning Outsourcing: 4 persons"></textarea>
+    <textarea id="block1" rows="9" placeholder="2026.06.05&#10;UVP2 PENTHOUSES&#10;Translation: 1 person&#10;Male workers: 8&#10;Electrician: 2 persons&#10;Female worker: 1 person&#10;Tasks: Apply materials...&#10;Total: 12 individuals.&#10;#Air Conditioning Outsourcing: 4 persons"></textarea>
   </div>
 
   <div id="extra-blocks"></div>
@@ -176,6 +166,7 @@ function normalizeActivity(str) {
   if (/clean|cleanup|housekeep/i.test(str)) return 'Site cleaning';
   if (/protective\s*measure|protection\s*measure/i.test(str)) return 'Site cleaning';
   if (/perform\s*cleanup/i.test(str)) return 'Site cleaning';
+  if (/organiz|incoming\s*material|sort.*material/i.test(str)) return 'Organising incoming materials';
   return cleanActivity(str);
 }
 
@@ -185,7 +176,7 @@ function extractActivities(raw) {
 
   for (const l of lines) {
     if (/^(name|overall|achieve|total|site\s*super|team\s*lead|technician|take\s*leave|manpower|progress|date|project|\*?activity$|\*$)/i.test(l)) continue;
-    if (/^\d+[%.]/.test(l) && !/^\d+\.\s*(to\s|install|lay|apply|route|connect|fix|clean|perform)/i.test(l)) continue;
+    if (/^\d+[%.]/.test(l) && !/^\d+\.\s*(to\s|install|lay|apply|route|connect|fix|clean|perform|scrape|organiz)/i.test(l)) continue;
 
     let stripped = l
       .replace(/^\*?activity\s*$/i, '')
@@ -198,7 +189,7 @@ function extractActivities(raw) {
     if (stripped.length < 5) continue;
     if (/^(name|overall|achieve|total|site\s*super|team\s*lead|technician|take\s*leave|manpower|progress)/i.test(stripped)) continue;
 
-    if (/^(install|lay|apply|route|connect|fix|clean|perform|carry|move|deliver|paint|tile|drain|pipe)/i.test(stripped) ||
+    if (/^(install|lay|apply|route|connect|fix|clean|perform|carry|move|deliver|paint|tile|drain|pipe|scrape|organiz)/i.test(stripped) ||
         /^(?:activity\s*)?\d+[.)]/i.test(l) || /^[-•*]/.test(l) || /^To\s+/i.test(l)) {
       const norm = normalizeActivity(stripped);
       if (norm) activities.push(norm);
@@ -228,7 +219,7 @@ function parseMainBlock(raw) {
     date = `${parseInt(dm[3]).toString().padStart(2,'0')} ${months[parseInt(dm[2])-1]} ${dm[1]}`;
   }
 
-  const projM = raw.match(/\d{4}[.\-\/]\d{2}[.\-\/]\d{2}([A-Z0-9 _-]+?)(?:Translation|Male|Female|Supervisor|Tasks|Total|\n)/i);
+  const projM = raw.match(/\d{4}[.\-\/]\d{2}[.\-\/]\d{2}\s*([A-Z0-9 _-]+?)(?:Translation|Male|Female|Supervisor|Tasks|Total|\n|$)/i);
   if (projM) project = projM[1].trim().toUpperCase();
   if (!project) {
     const m2 = raw.match(/UVP\s*\d*\s*PENTHOUSE[S]?/i);
@@ -236,26 +227,25 @@ function parseMainBlock(raw) {
   }
 
   for (const l of lines) {
-    if (/translat|interpret|supervisor|site\s*super/i.test(l)) supervisor += extractNumber(l);
-    else if (/^male\s*work/i.test(l)) male += extractNumber(l);
-    else if (/^female\s*work/i.test(l)) female += extractNumber(l);
-    else if (/^electrical\s*work/i.test(l)) electrical += extractNumber(l);
-    else if (/#?air.?con|#?a\/c|outsourc/i.test(l)) electrical += extractNumber(l);
+    if (/translat|interpret|supervisor|site\s*super/i.test(l))  supervisor += extractNumber(l);
+    else if (/^male\s*work/i.test(l))                           male       += extractNumber(l);
+    else if (/^female\s*work/i.test(l))                         female     += extractNumber(l);
+    else if (/^electrician|^electrical\s*work/i.test(l))        electrical += extractNumber(l);
+    else if (/#?air.?con|#?a\/c\s*outsourc|outsourc/i.test(l)) electrical += extractNumber(l);
   }
 
   return { date, project, supervisor, male, female, electrical, activities: extractActivities(raw) };
 }
 
 function parseSubBlock(raw) {
-  // manpower ignored — activities only
   return { activities: extractActivities(raw) };
 }
 
 function categorize(activities) {
   const id = [], mep = [], general = [];
-  const mepRx = /pipe|drain|water|electrical|cable|conduit|wire|socket|switch|light|fixture|panel|db\s*board|cdu|fcu|ahu|duct|hvac|air.?con|ventilat|sprinkler|fire|plumb|sanitary|toilet|pump|valve|riser|trunk|route\s*pipe/i;
-  const idRx  = /floor\s*tile|lay.*tile|tile|lay.*material|plaster|paint|skirting|ceiling|partition|gypsum|carpentry|door|window|wallpaper|vinyl|timber|wood|parquet|screed|skim|render|wall\s*finish/i;
-  const genRx = /site\s*clean|clean|protective|protection|hoarding|barricad|debris|rubbish|waste|housekeep|store|deliver|material.*move|move.*material/i;
+  const mepRx = /pipe|drain|water|electrical|cable|conduit|wire|socket|switch|light|fixture|panel|db\s*board|cdu|fcu|ahu|duct|hvac|air.?con|ventilat|sprinkler|fire|plumb|sanitary|toilet|pump|valve|riser|trunk|route.*pipe|route.*wir|pvc\s*conduit/i;
+  const idRx  = /floor\s*tile|lay.*tile|tile|apply.*material|lay.*material|plaster|paint|skirting|ceiling|partition|gypsum|carpentry|door|window|wallpaper|vinyl|timber|wood|parquet|screed|skim|render|wall\s*finish|joint\s*compound|scrape/i;
+  const genRx = /site\s*clean|clean|protective|protection|hoarding|barricad|debris|rubbish|waste|housekeep|organiz|incoming\s*material|store|deliver|material.*move|move.*material/i;
 
   for (const a of activities) {
     if (mepRx.test(a)) mep.push(a);
