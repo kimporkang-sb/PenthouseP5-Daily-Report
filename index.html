@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Site Report">
+<title>Daily Site Report</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F2EE;
+    --surface: #FFFFFF;
+    --border: #E0DDD7;
+    --text: #1A1917;
+    --muted: #7A7570;
+    --accent: #DB0825;
+    --accent-light: #FFF0F1;
+    --olive: #414535;
+    --olive-light: #F0F0EC;
+    --radius: 10px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
+  }
+  header {
+    background: var(--olive);
+    padding: 18px 20px 16px;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+  }
+  header h1 {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  header p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+    font-family: var(--mono);
+  }
+  .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-label {
+    background: var(--olive-light);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--olive);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-label .tag {
+    background: var(--olive);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .card-label .tag.sub {
+    background: var(--accent);
+  }
+  textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    background: transparent;
+    padding: 12px 14px;
+    display: block;
+    -webkit-appearance: none;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea.output-ta {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 260px;
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .add-btn:active { background: var(--border); }
+
+  .generate-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    -webkit-appearance: none;
+    transition: opacity 0.15s;
+  }
+  .generate-btn:active { opacity: 0.85; }
+
+  .output-wrap { display: none; }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--accent);
+    border-bottom: 1px solid var(--border);
+  }
+  .output-header span {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .copy-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .copy-btn:active { background: rgba(255,255,255,0.35); }
+
+  .error {
+    display: none;
+    background: #FFF0F1;
+    border: 1px solid #FFCDD2;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Site Report Formatter</h1>
+  <p>Singbuild Construction Co., Ltd.</p>
+</header>
+
+<div class="content">
+
+  <div class="card">
+    <div class="card-label">Block 1 — Main Report <span class="tag">Manpower + Activities</span></div>
+    <textarea id="block1" rows="9" placeholder="2026.06.04UVP2 PENTHOUSES&#10;Translation: 1 person&#10;Male workers: 11&#10;Electrical workers: 3&#10;Female workers: 2&#10;Tasks: Lay materials, apply floor tiles...&#10;Total: 17 individuals."></textarea>
+  </div>
+
+  <div id="extra-blocks"></div>
+
+  <button class="add-btn" onclick="addBlock()">＋ Add subcontractor block</button>
+
+  <button class="generate-btn" onclick="generate()">Generate Report</button>
+
+  <div id="error" class="error"></div>
+
+  <div id="output-wrap" class="output-wrap">
+    <div class="card">
+      <div class="output-header">
+        <span>Telegram Output</span>
+        <button class="copy-btn" id="copy-btn" onclick="copyOutput()">Copy</button>
+      </div>
+      <textarea id="output" class="output-ta" readonly></textarea>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">Tap "Add to Home Screen" in Safari to install</div>
+
+<script>
+let blockCount = 1;
+
+function addBlock() {
+  blockCount++;
+  const wrap = document.getElementById('extra-blocks');
+  const div = document.createElement('div');
+  div.id = 'block-wrap-' + blockCount;
+  div.style.marginBottom = '0';
+  div.innerHTML = `
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-label">
+        Block ${blockCount} — Subcontractor <span class="tag sub">Activities + Electrical</span>
+        <button class="remove-btn" onclick="removeBlock(${blockCount})">×</button>
+      </div>
+      <textarea id="block${blockCount}" rows="7" placeholder="01. Name of Project: ...&#10;04. Total Manpower: 4ppl&#10;Activity&#10;1. To install CDU at LF (2ppl)&#10;2. To install drain pipe at UF (2ppl)"></textarea>
+    </div>
+  `;
+  wrap.appendChild(div);
+  // small gap
+  div.style.marginBottom = '12px';
+}
+
+function removeBlock(n) {
+  const el = document.getElementById('block-wrap-' + n);
+  if (el) el.remove();
+}
+
+function extractNumber(str) {
+  const m = str.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function cleanActivity(str) {
+  str = str.replace(/\s+at\s+(LF|UF|GF|[Ll]evel\s*\d+|[Ll]\d+|[Gg]round\s*[Ff]loor|[Uu]pper\s*[Ff]loor|[Ll]ower\s*[Ff]loor)\b/gi, '');
+  str = str.replace(/\s*\(\d+\s*(?:ppl|pax|persons?|people|workers?|individuals?)?\)/gi, '');
+  str = str.replace(/\s*[-–]\s*\d+\s*(?:ppl|pax|persons?)\s*$/gi, '');
+  str = str.trim();
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function normalizeActivity(str) {
+  if (/clean|cleanup|housekeep/i.test(str)) return 'Site cleaning';
+  if (/protective\s*measure|protection\s*measure/i.test(str)) return 'Site cleaning';
+  if (/perform\s*cleanup/i.test(str)) return 'Site cleaning';
+  return cleanActivity(str);
+}
+
+function extractActivities(raw) {
+  const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const activities = [];
+
+  for (const l of lines) {
+    if (/^(name|overall|achieve|total|site\s*super|team\s*lead|technician|take\s*leave|manpower|progress|date|project|\*?activity$|\*$)/i.test(l)) continue;
+    if (/^\d+[%.]/.test(l) && !/^\d+\.\s*(to\s|install|lay|apply|route|connect|fix|clean|perform)/i.test(l)) continue;
+
+    let stripped = l
+      .replace(/^\*?activity\s*$/i, '')
+      .replace(/^\*?activity\s+/i, '')
+      .replace(/^\d+[.)]\s*/i, '')
+      .replace(/^[-•*]\s*/, '')
+      .replace(/^To\s+/i, '')
+      .trim();
+
+    if (stripped.length < 5) continue;
+    if (/^(name|overall|achieve|total|site\s*super|team\s*lead|technician|take\s*leave|manpower|progress)/i.test(stripped)) continue;
+
+    if (/^(install|lay|apply|route|connect|fix|clean|perform|carry|move|deliver|paint|tile|drain|pipe)/i.test(stripped) ||
+        /^(?:activity\s*)?\d+[.)]/i.test(l) ||
+        /^[-•*]/.test(l) ||
+        /^To\s+/i.test(l)) {
+      const norm = normalizeActivity(stripped);
+      if (norm) activities.push(norm);
+    }
+  }
+
+  const taskLine = raw.match(/tasks?:\s*(.+)/i);
+  if (taskLine) {
+    taskLine[1].split(/[,;]/).map(t => t.trim()).filter(Boolean).forEach(t => {
+      t = t.replace(/^and\s+/i, '').trim();
+      const norm = normalizeActivity(t);
+      if (norm && !activities.includes(norm)) activities.push(norm);
+    });
+  }
+
+  return [...new Set(activities)];
+}
+
+function parseMainBlock(raw) {
+  const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean);
+  let supervisor = 0, male = 0, female = 0, electrical = 0;
+  let date = '', project = '';
+
+  const dm = raw.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);
+  if (dm) {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    date = `${parseInt(dm[3]).toString().padStart(2,'0')} ${months[parseInt(dm[2])-1]} ${dm[1]}`;
+  }
+
+  const projM = raw.match(/\d{4}[.\-\/]\d{2}[.\-\/]\d{2}([A-Z0-9 _-]+?)(?:Translation|Male|Female|Supervisor|Tasks|Total|\n)/i);
+  if (projM) project = projM[1].trim().toUpperCase();
+  if (!project) {
+    const m2 = raw.match(/UVP\s*\d*\s*PENTHOUSE[S]?/i);
+    if (m2) project = m2[0].trim().toUpperCase().replace(/PENTHOUSES$/i, 'PENTHOUSE');
+  }
+
+  for (const l of lines) {
+    if (/translat|interpret|supervisor|site\s*super/i.test(l)) supervisor += extractNumber(l);
+    else if (/^male\s*work/i.test(l)) male += extractNumber(l);
+    else if (/^female\s*work/i.test(l)) female += extractNumber(l);
+    else if (/^electrical\s*work/i.test(l)) electrical += extractNumber(l);
+    else if (/air.?con|a\/c\s*outsourc|outsourc/i.test(l)) electrical += extractNumber(l);
+  }
+
+  return { date, project, supervisor, male, female, electrical, activities: extractActivities(raw) };
+}
+
+function parseSubBlock(raw) {
+  let manpower = 0;
+  const totalM = raw.match(/total\s*manpower[:\s]+(\d+)\s*(?:ppl|persons?|individuals?)?/i);
+  if (totalM) manpower = parseInt(totalM[1]);
+  if (!manpower) {
+    const techM = raw.match(/technician[^:]*:\s*(\d+)/i);
+    if (techM) manpower += parseInt(techM[1]);
+  }
+  return { manpower, activities: extractActivities(raw) };
+}
+
+function categorize(activities) {
+  const id = [], mep = [], general = [];
+  const mepRx = /pipe|drain|water|electrical|cable|conduit|wire|socket|switch|light|fixture|panel|db\s*board|cdu|fcu|ahu|duct|hvac|air.?con|ventilat|sprinkler|fire|plumb|sanitary|toilet|pump|valve|riser|trunk|route\s*pipe/i;
+  const idRx  = /floor\s*tile|lay.*tile|tile|lay.*material|plaster|paint|skirting|ceiling|partition|gypsum|carpentry|door|window|wallpaper|vinyl|timber|wood|parquet|screed|skim|render|wall\s*finish/i;
+  const genRx = /site\s*clean|clean|protective|protection|hoarding|barricad|debris|rubbish|waste|housekeep|store|deliver|material.*move|move.*material/i;
+
+  for (const a of activities) {
+    if (mepRx.test(a)) mep.push(a);
+    else if (idRx.test(a)) id.push(a);
+    else if (genRx.test(a)) general.push(a);
+    else id.push(a);
+  }
+  return { id, mep, general };
+}
+
+function generate() {
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('output-wrap').style.display = 'none';
+
+  try {
+    const raw1 = document.getElementById('block1').value.trim();
+    if (!raw1) throw new Error('Block 1 is empty.');
+
+    const main = parseMainBlock(raw1);
+    let allActivities = [...main.activities];
+    let extraElectrical = 0;
+
+    document.querySelectorAll('[id^="block-wrap-"]').forEach(div => {
+      const n = div.id.replace('block-wrap-', '');
+      const ta = document.getElementById('block' + n);
+      if (ta && ta.value.trim()) {
+        const sub = parseSubBlock(ta.value.trim());
+        extraElectrical += sub.manpower;
+        sub.activities.forEach(a => { if (!allActivities.includes(a)) allActivities.push(a); });
+      }
+    });
+
+    const totalElectrical = main.electrical + extraElectrical;
+    const totalManpower = main.supervisor + main.male + main.female + totalElectrical;
+    const { id, mep, general } = categorize([...new Set(allActivities)]);
+
+    const out = [];
+    out.push('DAILY SITE ACTIVITIES REPORT');
+    out.push(`Date: ${main.date || '[DATE]'}`);
+    out.push(`Project: ${main.project || '[PROJECT]'}`);
+    out.push('');
+    out.push('Manpower Summary');
+    if (main.supervisor > 0) out.push(`- Supervisor: ${main.supervisor} person${main.supervisor > 1 ? 's' : ''}`);
+    if (main.male > 0)       out.push(`- Male Worker: ${main.male} persons`);
+    if (main.female > 0)     out.push(`- Female Worker: ${main.female} persons`);
+    if (totalElectrical > 0) out.push(`- Electrical Workers: ${totalElectrical} persons`);
+    out.push(`Total Manpower: ${totalManpower} persons`);
+    if (id.length)      { out.push(''); out.push('ID Works');      id.forEach(a => out.push(`- ${a}`)); }
+    if (mep.length)     { out.push(''); out.push('MEP Works');     mep.forEach(a => out.push(`- ${a}`)); }
+    if (general.length) { out.push(''); out.push('General Works'); general.forEach(a => out.push(`- ${a}`)); }
+
+    document.getElementById('output').value = out.join('\n');
+    document.getElementById('output-wrap').style.display = 'block';
+    document.getElementById('output-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    document.getElementById('error').textContent = 'Error: ' + e.message;
+    document.getElementById('error').style.display = 'block';
+  }
+}
+
+function copyOutput() {
+  const out = document.getElementById('output');
+  out.select();
+  // iOS fallback
+  const range = document.createRange();
+  range.selectNodeContents(out);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  out.setSelectionRange(0, 99999);
+  document.execCommand('copy');
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Copied ✓';
+  setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+}
+</script>
+</body>
+</html>
