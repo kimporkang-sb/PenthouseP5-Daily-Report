@@ -252,8 +252,23 @@ function extractActivities(rawText, isBlock1) {
     let l = line.trim();
     if (!l) continue;
     if (isBlock1 && /^tasks?\s*:/i.test(l)) {
-      const parts = l.replace(/^tasks?\s*:\s*/i, '').split(/,|;|\band\b/i);
+      let taskStr = l.replace(/^tasks?\s*:\s*/i, '').replace(/\.$/, '').trim();
+      // Protect 'X and Y' noun pairs from being split
+      const PROTECT_PAIRS = [
+        [/\b(main\s+and\s+secondary)\b/gi, '__MAIN_AND_SECONDARY__'],
+        [/\b(primary\s+and\s+secondary)\b/gi, '__PRIMARY_AND_SECONDARY__'],
+        [/\b(upper\s+and\s+lower)\b/gi, '__UPPER_AND_LOWER__'],
+        [/\b(hot\s+and\s+cold)\b/gi, '__HOT_AND_COLD__'],
+        [/\b(supply\s+and\s+return)\b/gi, '__SUPPLY_AND_RETURN__'],
+        [/\b(inside\s+and\s+outside)\b/gi, '__INSIDE_AND_OUTSIDE__'],
+        [/\b(walls?\s+and\s+floors?)\b/gi, '__WALLS_AND_FLOORS__'],
+      ];
+      const PROTECT_ORIG = ['main and secondary','primary and secondary','upper and lower','hot and cold','supply and return','inside and outside','walls and floors'];
+      PROTECT_PAIRS.forEach(([rx, ph]) => { taskStr = taskStr.replace(rx, ph); });
+      // Split on comma or semicolon (optionally followed by 'and'), or bare ' and ' between activities
+      const parts = taskStr.split(/,\s*(?:and\s+)?|;\s*|\s+and\s+/i);
       for (let p of parts) {
+        PROTECT_PAIRS.forEach(([, ph], idx2) => { p = p.replace(new RegExp(ph.replace(/_/g,'_'),'gi'), PROTECT_ORIG[idx2]); });
         p = stripNoise(p.trim().replace(/\.$/, '').trim());
         if (!p) continue;
         for (const [pattern, replacement] of NORM) p = p.replace(pattern, replacement);
