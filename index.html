@@ -277,7 +277,10 @@ function extractActivities(rawText, isBlock1) {
       continue;
     }
     if (!isBlock1) {
-      if (SKIP.some(rx => rx.test(l))) continue;
+      // Strip leading bullet/number BEFORE skip check so "- Name of Project:" is caught
+      const lClean = l.replace(/^(\d+\.|[-•*]|\bTo\b)\s*/i, '').trim();
+      if (SKIP.some(rx => rx.test(lClean))) continue;
+      // Must still have started with a list marker to be an activity line
       if (!/^(\d+\.|[-•*]|\bTo\b)/i.test(l)) continue;
       l = stripNoise(l);
       if (!l) continue;
